@@ -1,0 +1,66 @@
+name:                mockingbird
+version:             0.1.0.0
+synopsis:
+description:         Please see README.md
+homepage:            http://github.com/jkarni/mockingbird#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Julian K. Arni
+maintainer:          jkarni@gmail.com
+copyright:           (c) Julian K. Arni
+github:              jkarni/mockingbird
+tested-with:         GHC == 7.8.3, GHC == 7.10.2, GHC == 8.0.1
+
+ghc-options: -Wall
+
+dependencies:
+  - base >= 4.7 && < 4.10
+  - text
+  - bytestring
+  - parsec
+  - twitter-types
+  - twitter-conduit
+  - conduit
+  - transformers
+  - resourcet
+  - lens
+
+default-extensions:
+  - AutoDeriveTypeable
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveFoldable
+  - DeriveTraversable
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - MultiParamTypeClasses
+  - OverloadedStrings
+  - RankNTypes
+  - ScopedTypeVariables
+  - TypeOperators
+
+library:
+  source-dirs:      src
+  other-modules:    []
+
+tests:
+  spec:
+    main:            Spec.hs
+    source-dirs:     test
+    dependencies:
+      - mockingbird
+      - hspec > 2 && < 3
+      - QuickCheck >= 2.8 && < 2.9
+  doctest:
+    main:            Doctest.hs
+    source-dirs:     test
+    dependencies:
+      - doctest >= 0.9 && < 0.12
+      - Glob >= 0.7 && < 0.8
+      - yaml == 0.8.*
+
