@@ -25,6 +25,7 @@ dependencies:
   - resourcet
   - lens
   - hslogger
+  - http-types
 
 default-extensions:
   - AutoDeriveTypeable

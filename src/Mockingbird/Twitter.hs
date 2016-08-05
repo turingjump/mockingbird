@@ -1,7 +1,7 @@
 module Mockingbird.Twitter where
 
 import           Control.Concurrent
-import           Control.Lens ((&), (?~))
+import           Control.Lens                   ((&), (?~))
 import           Control.Monad
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Resource   (runResourceT)
@@ -9,10 +9,14 @@ import qualified Data.Conduit                   as C
 import qualified Data.Conduit.List              as CL
 import           Data.Monoid
 import qualified Data.Text                      as T
-import           Web.Twitter.Conduit            (Manager, call, stream, update,
+import qualified System.Log.Logger              as Log
+import           Web.Twitter.Conduit            (Manager, callWithResponse,
+                                                 responseStatus, stream, update,
                                                  userstream)
 import           Web.Twitter.Conduit.Parameters (inReplyToStatusId)
 import           Web.Twitter.Types
+
+import Network.HTTP.Types.Status (statusCode)
 
 import Mockingbird.Combinators
 import Mockingbird.Parse
@@ -49,8 +53,11 @@ handleTweet :: Manager -> Bird -> Status -> IO ()
 handleTweet mgr bird tweet = case evalTweet bird tweet of
   Nothing -> return ()
   Just response -> do
-    print newTweet
-    void $ call (account bird) mgr newTweet
+    Log.infoM "Mockingbird" $ "Posting: " <> show newTweet
+    resp <- callWithResponse (account bird) mgr newTweet
+    when (statusCode (responseStatus resp) > 300) $
+      Log.errorM "Mockinbird" $ "Error posting: " <> show resp
+
     where
       newTweet = update response & inReplyToStatusId ?~ statusId tweet
 

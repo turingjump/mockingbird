@@ -37,6 +37,7 @@ library
     , resourcet
     , lens
     , hslogger
+    , http-types
   exposed-modules:
       Mockingbird
       Mockingbird.Combinators
@@ -63,6 +64,7 @@ executable mockingbird
     , resourcet
     , lens
     , hslogger
+    , http-types
     , mockingbird
   default-language: Haskell2010
 
@@ -85,6 +87,7 @@ test-suite doctest
     , resourcet
     , lens
     , hslogger
+    , http-types
     , doctest >= 0.9 && < 0.12
     , Glob >= 0.7 && < 0.8
     , yaml == 0.8.*
@@ -112,6 +115,7 @@ test-suite spec
     , resourcet
     , lens
     , hslogger
+    , http-types
     , mockingbird
     , hspec > 2 && < 3
     , QuickCheck >= 2.8 && < 2.9
