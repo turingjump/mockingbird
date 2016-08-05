@@ -48,6 +48,13 @@ library:
   source-dirs:      src
   other-modules:    []
 
+executables:
+  mockingbird:
+    main:            Main.hs
+    source-dirs:     driver
+    dependencies:
+      - mockingbird
+
 tests:
   spec:
     main:            Spec.hs

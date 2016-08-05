@@ -1,7 +1,7 @@
 module Mockingbird.Twitter where
 
-import           Control.Concurrent             (forkIO)
-import           Control.Lens
+import           Control.Concurrent
+import           Control.Lens ((&), (?~))
 import           Control.Monad
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Trans.Resource   (runResourceT)
@@ -45,7 +45,9 @@ evalTweet bird tweet = case parseTweet $ statusText tweet of
 handleTweet :: Manager -> Bird -> Status -> IO ()
 handleTweet mgr bird tweet = case evalTweet bird tweet of
   Nothing -> return ()
-  Just response -> void $ call (account bird) mgr newTweet
+  Just response -> do
+    print newTweet
+    void $ call (account bird) mgr newTweet
     where
       newTweet = update response & inReplyToStatusId ?~ statusId tweet
 
@@ -60,4 +62,24 @@ processTweets cfg bird = runResourceT $ do
 
 -- | Process tweets for all birds
 processAll :: Config -> IO ()
-processAll cfg = mapM_ (forkIO . processTweets cfg) (birds cfg)
+processAll cfg = do
+  children <- newMVar []
+  mapM_ (forkChild children . processTweets cfg) (birds cfg)
+  waitForChildren children
+  where
+
+    forkChild :: MVar [MVar ()] -> IO () -> IO ThreadId
+    forkChild children action = do
+      mvar <- newEmptyMVar
+      modifyMVar_ children (\x -> return $ mvar:x)
+      forkFinally action (const $ putMVar mvar ())
+
+    waitForChildren ::  MVar [MVar ()] -> IO ()
+    waitForChildren children = do
+      cs <- takeMVar children
+      case cs of
+        []   -> return ()
+        m:ms -> do
+           putMVar children ms
+           takeMVar m
+           waitForChildren children
