@@ -1,0 +1,7 @@
+
+- Add M bird (and Y?)
+- Make T | JMP Labs page
+- Add photos and other profile info for birds
+- Come up with a demo tweet
+- Do not tweet if evaluation loops
+- Stop tweeting if there have been too many eval steps

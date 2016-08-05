@@ -21,5 +21,6 @@ parser = do
     sub = parens lang parser
      <|> (Var <$> lexeme lang (identifier lang))
 
-parseTweet :: T.Text -> Either String (Exp T.Text)
-parseTweet s = fmap (fmap T.pack) $ first show $ parse parser "(tweet)" (T.unpack s)
+parseTweet :: T.Text -> Either T.Text (Exp T.Text)
+parseTweet s
+  = fmap (fmap T.pack) $ first (T.pack . show) $ parse parser "(tweet)" (T.unpack s)

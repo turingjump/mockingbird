@@ -1,9 +1,12 @@
 module Mockingbird.Types where
 
+import           Control.Monad.Trans.Resource (ResourceT)
+import           Data.Conduit                 (ResumableSource)
 import           Data.Monoid
-import qualified Data.Text                 as T
-import           GHC.Generics              (Generic)
-import           Web.Twitter.Conduit.Types (TWInfo)
+import qualified Data.Text                    as T
+import           GHC.Generics                 (Generic)
+import           Web.Twitter.Conduit.Types    (TWInfo)
+import           Web.Twitter.Types            (Status, StreamingAPI)
 
 data Exp x
   = Exp x :$ Exp x
@@ -21,9 +24,11 @@ pprint (Var x) = x
 pprint (a :$ Var b) = pprint a <> " " <> b
 pprint (a :$ b) = pprint a <> " (" <> pprint b <> ")"
 
-data TwitterAccount = TwitterAccount
-  { accountName :: String
-  } deriving (Eq, Show, Read, Generic)
+data Config = Config
+  { tweetStream :: Bird -> ResourceT IO (ResumableSource (ResourceT IO) StreamingAPI)
+  , postTweet   :: Bird -> Status -> IO ()
+  , birds       :: [Bird]
+  } deriving (Generic)
 
 newtype Combinator = Combinator { getCombinator :: Exp T.Text -> Exp T.Text }
   deriving (Generic)

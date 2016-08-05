@@ -7,11 +7,15 @@ import           Mockingbird.Types
 import           Web.Twitter.Conduit   (Credential (..), OAuth (..), def,
                                         setCredential, twitterOAuth)
 
+
 eval :: Bird -> Exp T.Text -> Exp T.Text
 eval b = getCombinator (definition b)
 
+allBirds :: IO [Bird]
+allBirds = sequence [sBird, kBird, iBird, mBird]
+
 -- | @K@ or constant bird
--- Definition @ K x y = x @
+-- Definition: @ K x y = x @
 kBird :: IO Bird
 kBird = makeBird "secret/kbird.txt" go
   where
@@ -21,7 +25,7 @@ kBird = makeBird "secret/kbird.txt" go
     go _ z = z
 
 -- | @S@ bird
--- Definition @ S x y z = x z (y z)
+-- Definition: @ S x y z = x z (y z)
 sBird :: IO Bird
 sBird = makeBird "secret/sbird.txt" go
   where
@@ -31,7 +35,7 @@ sBird = makeBird "secret/sbird.txt" go
     go _ z = z
 
 -- | @I@ or identity bird
--- Definition @ I x = x @
+-- Definition: @ I x = x @
 iBird :: IO Bird
 iBird = makeBird "secret/ibird.txt" go
   where
@@ -40,11 +44,22 @@ iBird = makeBird "secret/ibird.txt" go
                        | otherwise              = r
     go _ z = z
 
+-- | @M@ bird.
+-- Definition: @ M x = x x @
+mBird :: IO Bird
+mBird = makeBird "secret/mbird.txt" go
+  where
+    go name (r@(_ :$ _) :$ d) = go name r :$ d
+    go name r@(n :$ x) | n == Var ("@" <> name) = x :$ x
+                       | otherwise              = r
+    go _ z = z
+
+
 makeBird :: FilePath -> (T.Text -> Exp T.Text -> Exp T.Text) -> IO Bird
 makeBird file comb = do
   contents <- readFile file
   case lines contents of
-    (name:consumerKey:consumerSecret:apiToken:apiTokenSecret:[])
+    [name, consumerKey, consumerSecret, apiToken, apiTokenSecret]
        -> return Bird { nick = T.pack name
                       , account = twInfo
                       , definition = Combinator $ comb $ T.pack name

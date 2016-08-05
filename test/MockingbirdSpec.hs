@@ -1,11 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module MockingbirdSpec (spec) where
 
+import           Control.Concurrent
 import           Data.Monoid
-import qualified Data.Text       as T
+import qualified Data.Text               as T
 import           Mockingbird
 import           Test.Hspec
 import           Test.QuickCheck
+import           Web.Twitter.Types
 
 
 spec :: Spec
@@ -13,6 +15,7 @@ spec = do
   parseSpec
   pprintSpec
   birdsSpec
+  processAllSpec
 
 
 parseSpec :: Spec
@@ -54,9 +57,9 @@ birdsSpec = describe "birds" $ do
   let test b v = eval <$> b <*> pure v
       parse bird tweet = do
         name <- nick <$> bird
-        return $ parseTweet $ "@" <> name  <>  " " <> tweet
+        return $ parseTweet $ "@" <> name <> " " <> tweet
 
-  context "k bird" $ do
+  context "K bird" $ do
 
     it "meets the definition" $ do
       Right v <- parse kBird "x y"
@@ -70,7 +73,7 @@ birdsSpec = describe "birds" $ do
       Right v <- parse kBird "x y z"
       test kBird v `shouldReturn` (Var "x" :$ Var "z")
 
-  context "s bird" $ do
+  context "S bird" $ do
 
     it "meets the definition" $ do
       Right v <- parse sBird "x y z"
@@ -80,7 +83,7 @@ birdsSpec = describe "birds" $ do
       Right v <- parse sBird "x y z a"
       test sBird v `shouldReturn` Var "x" :$ Var "z" :$ (Var "y" :$ Var "z") :$ Var "a"
 
-  context "i bird" $ do
+  context "I bird" $ do
 
     it "meets the definition" $ do
       Right v <- parse iBird "x"
@@ -89,6 +92,86 @@ birdsSpec = describe "birds" $ do
     it "associates left" $ do
       Right v <- parse iBird "x y"
       test iBird v `shouldReturn` Var "x" :$ Var "y"
+
+  context "M bird" $ do
+
+    it "meets the definition" $ do
+      Right v <- parse mBird "x"
+      test mBird v `shouldReturn` (Var "x" :$ Var "x")
+
+    it "associates left" $ do
+      Right v <- parse mBird "x y"
+      test mBird v `shouldReturn` Var "x" :$ Var "x" :$ Var "y"
+
+
+processAllSpec :: Spec
+processAllSpec = describe "processAll" $ do
+
+  let testStatus t = Status { statusContributors = Nothing
+                            , statusCoordinates = Nothing
+                            , statusCreatedAt = error "time"
+                            , statusCurrentUserRetweet = Nothing
+                            , statusEntities = Nothing
+                            , statusExtendedEntities = Nothing
+                            , statusFavoriteCount = 0
+                            , statusFavorited = Nothing
+                            , statusFilterLevel = Nothing
+                            , statusId = 1
+                            , statusInReplyToScreenName = Nothing
+                            , statusInReplyToStatusId = Nothing
+                            , statusInReplyToUserId = Nothing
+                            , statusLang = Nothing
+                            , statusPlace = Nothing
+                            , statusPossiblySensitive = Nothing
+                            , statusScopes = Nothing
+                            , statusQuotedStatusId = Nothing
+                            , statusQuotedStatus = Nothing
+                            , statusRetweetCount = 0
+                            , statusRetweeted = Nothing
+                            , statusRetweetedStatus = Nothing
+                            , statusSource = ""
+                            , statusText = t
+                            , statusTruncated = False
+                            , statusUser = error "here"
+                            , statusWithheldCopyright = Nothing
+                            , statusWithheldInCountries = Nothing
+                            , statusWithheldScope = Nothing
+                            }
+
+  it "posts tweets when appropriate" $ do
+    mvar <- newEmptyMVar
+    bs <- iBird
+    let cfg = testConfig [testStatus $ "@" <> nick bs <> " hi"]
+                         (\bird tw -> case evalTweet bird tw of
+                             Nothing -> return ()
+                             Just t -> putMVar mvar (bird, t))
+    processAll $ cfg { birds = [bs] }
+    (bird, text) <- readMVar mvar
+    nick bird `shouldBe` "tjmp_i"
+    text `shouldBe` "hi"
+
+  it "doesn't post tweets when not the first thing mentioned" $ do
+    mvar <- newEmptyMVar
+    bs <- iBird
+    let cfg = testConfig [testStatus $ "hi @" <> nick bs]
+                         (\bird tw -> case evalTweet bird tw of
+                             Nothing -> return ()
+                             Just t -> putMVar mvar (bird, t))
+    processAll $ cfg { birds = [bs] }
+    Nothing <- tryReadMVar mvar -- Can't use shouldReturn do to missing Eq instance
+    return ()
+
+  it "doesn't post tweets when evaluation loops" $ do
+    mvar <- newEmptyMVar
+    bs <- mBird
+    let cfg = testConfig [testStatus $ "@" <> nick bs <> " @" <> nick bs]
+                         (\bird tw -> case evalTweet bird tw of
+                             Nothing -> return ()
+                             Just t -> putMVar mvar (bird, t))
+    processAll $ cfg { birds = [bs] }
+    Nothing <- tryReadMVar mvar -- Can't use shouldReturn do to missing Eq instance
+    return ()
+
 
 instance Arbitrary (Exp T.Text) where
   arbitrary = fmap T.pack <$> arbitrary

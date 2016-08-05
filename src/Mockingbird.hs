@@ -1,14 +1,20 @@
 module Mockingbird
   ( Exp(..)
-  , TwitterAccount(..)
   , Bird(..)
+  , Config(..)
   , parseTweet
+  , evalTweet
   , pprint
   , eval
   -- * Birds
   , kBird
   , sBird
   , iBird
+  , mBird
+  , allBirds
+
+  , testConfig
+  , processAll
 
   , main
   ) where
@@ -18,13 +24,10 @@ import Mockingbird.Parse
 import Mockingbird.Twitter
 import Mockingbird.Types
 
-import Control.Concurrent  (forkIO)
-import Control.Monad
 import Web.Twitter.Conduit (newManager, tlsManagerSettings)
 
 main :: IO ()
 main = do
-  mgr <- newManager tlsManagerSettings
-  void $ forkIO . processTweets mgr <$> sBird
-  void $ forkIO . processTweets mgr <$> kBird
-  void $ forkIO . processTweets mgr <$> iBird
+  cfg <- twitterConfig <$> newManager tlsManagerSettings
+  bs <- sequence [sBird, kBird, iBird, mBird]
+  processAll (cfg { birds = bs })
