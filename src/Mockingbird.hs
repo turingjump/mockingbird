@@ -1,5 +1,6 @@
 module Mockingbird
   ( Exp(..)
+  , TWExp(..)
   , Bird(..)
   , Config(..)
   , parseTweet

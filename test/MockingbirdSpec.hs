@@ -22,39 +22,53 @@ parseSpec :: Spec
 parseSpec = describe "parsing" $ do
 
   it "is left associative" $ do
-    parseTweet "A B C"
+    expression <$> (parseTweet "A B C")
       `shouldBe` Right (Var "A" :$ Var "B" :$ Var "C")
 
   it "respects parentheses" $ do
-    parseTweet "A (B C)"
+    expression <$> (parseTweet "A (B C)")
       `shouldBe` Right (Var "A" :$ (Var "B" :$ Var "C"))
-    parseTweet "A ( B C )"
+    expression <$> (parseTweet "A ( B C )")
       `shouldBe` Right (Var "A" :$ (Var "B" :$ Var "C"))
 
   it "ignores extra spaces" $ do
-    parseTweet "  A B C"
+    expression <$> (parseTweet "  A B C")
       `shouldBe` Right (Var "A" :$ Var "B" :$ Var "C")
-    parseTweet "  A\n B C"
+    expression <$> (parseTweet "  A\n B C")
       `shouldBe` Right (Var "A" :$ Var "B" :$ Var "C")
-    parseTweet "  A\n B C\n\n\t"
+    expression <$> (parseTweet "  A\n B C\n\n\t")
       `shouldBe` Right (Var "A" :$ Var "B" :$ Var "C")
 
   it "accepts identifiers with @s" $ do
-    parseTweet "@A B C"
+    expression <$> (parseTweet "@A B C")
       `shouldBe` Right (Var "@A" :$ Var "B" :$ Var "C")
+
+  it "correctly mentions no original poster" $ do
+    originalPoster <$> (parseTweet "exp")
+      `shouldBe` Right Nothing
+
+  it "correctly mentions an original poster" $ do
+    originalPoster <$> (parseTweet "exp | poster")
+      `shouldBe` Right (Just "poster")
 
 pprintSpec :: Spec
 pprintSpec = describe "pprint" $ do
 
   it "does not use redundant spaces or parentheses" $ do
     pprint <$> parseTweet " A B C" `shouldBe` Right "A B C"
+    pprint <$> parseTweet " A B C | p " `shouldBe` Right "A B C | p"
 
   it "is the right inverse of parseTweet" $ do
-    property $ \e -> parseTweet (pprint e) `shouldBe` Right e
+    let goodPoster Nothing = True
+        goodPoster (Just x)
+          = T.length x /= 0 && T.all (\a -> a `elem` ['@'..'z']) x
+    property $ \e -> goodPoster (originalPoster e) ==>
+      parseTweet (pprint e) `shouldBe` Right e
+
 
 birdsSpec :: Spec
 birdsSpec = describe "birds" $ do
-  let test b v = eval <$> b <*> pure v
+  let test b v = expression <$> (eval <$> b <*> pure v)
       parse bird tweet = do
         name <- nick <$> bird
         return $ parseTweet $ "@" <> name <> " " <> tweet
@@ -67,7 +81,7 @@ birdsSpec = describe "birds" $ do
 
     it "doesn't eval when it is not the head" $ do
       let Right v = parseTweet "a b c"
-      test kBird v `shouldReturn` v
+      test kBird v `shouldReturn` Var "a" :$ Var "b" :$ Var "c"
 
     it "associates left" $ do
       Right v <- parse kBird "x y z"
@@ -141,19 +155,19 @@ processAllSpec = describe "processAll" $ do
   it "posts tweets when appropriate" $ do
     mvar <- newEmptyMVar
     bs <- iBird
-    let cfg = testConfig [testStatus $ "@" <> nick bs <> " hi"]
+    let cfg = testConfig [testStatus $ "@" <> nick bs <> " hi | user"]
                          (\bird tw -> case evalTweet bird tw of
                              Nothing -> return ()
                              Just t -> putMVar mvar (bird, t))
     processAll $ cfg { birds = [bs] }
     (bird, text) <- readMVar mvar
     nick bird `shouldBe` "tjmp_i"
-    text `shouldBe` "hi"
+    text `shouldBe` "hi | user"
 
   it "doesn't post tweets when not the first thing mentioned" $ do
     mvar <- newEmptyMVar
     bs <- iBird
-    let cfg = testConfig [testStatus $ "hi @" <> nick bs]
+    let cfg = testConfig [testStatus $ "hi @" <> nick bs <> " | user"]
                          (\bird tw -> case evalTweet bird tw of
                              Nothing -> return ()
                              Just t -> putMVar mvar (bird, t))
@@ -172,6 +186,19 @@ processAllSpec = describe "processAll" $ do
     Nothing <- tryReadMVar mvar -- Can't use shouldReturn do to missing Eq instance
     return ()
 
+  it "gives good error messages" $ do
+    mvar <- newEmptyMVar
+    bs <- iBird
+    let cfg = testConfig [testStatus $ "@" <> nick bs <> " x | |too much" ]
+                         (\bird tw -> case evalTweet bird tw of
+                             Nothing -> return ()
+                             Just t -> putMVar mvar (bird, t))
+    processAll $ cfg { birds = [bs] }
+    (_, text) <- readMVar mvar
+    text `shouldBe` "\"Parse Error\" (line 1, column 13):\nunexpected \"|\"\nexpecting identifier"
+
+instance Arbitrary (TWExp T.Text) where
+  arbitrary = TWExp <$> arbitrary <*> (fmap T.pack <$> arbitrary)
 
 instance Arbitrary (Exp T.Text) where
   arbitrary = fmap T.pack <$> arbitrary

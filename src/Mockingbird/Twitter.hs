@@ -36,9 +36,12 @@ testConfig statuses post = Config
 -- | Returns the reply the bird should make.
 evalTweet :: Bird -> Status -> Maybe T.Text
 evalTweet bird tweet = case parseTweet $ statusText tweet of
-  Left _err -> Nothing    -- TODO: Maybe add error messages
+  Left err -> Just err
   Right e | "@" <> nick bird == eHead e
-         && eval bird e /= e     -> Just (pprint $ eval bird e)
+         && eval bird e /= e     -> case eval bird e of
+              t@(TWExp _ (Just _))  -> Just $ pprint t
+              t                     -> Just $ pprint t
+                { originalPoster = Just $ userName (statusUser tweet)}
           | otherwise            -> Nothing
 
 -- | Handles one tweet, responding if appropriate

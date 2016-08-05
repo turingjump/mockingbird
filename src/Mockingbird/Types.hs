@@ -15,14 +15,26 @@ data Exp x
 
 infixl 2 :$
 
-eHead :: Exp x -> x
-eHead (Var x) = x
-eHead (i :$ _) = eHead i
+data TWExp x = TWExp
+  { expression     :: Exp x
+  , originalPoster :: Maybe x
+  } deriving (Eq, Show, Read, Generic, Functor)
 
-pprint :: Exp T.Text -> T.Text
-pprint (Var x) = x
-pprint (a :$ Var b) = pprint a <> " " <> b
-pprint (a :$ b) = pprint a <> " (" <> pprint b <> ")"
+
+eHead :: TWExp x -> x
+eHead e = case expression e of
+  Var x  -> x
+  i :$ _ -> eHead $ TWExp i Nothing
+
+pprint :: TWExp T.Text -> T.Text
+pprint tw = case originalPoster tw of
+  Nothing -> pprintExp (expression tw)
+  Just op -> pprintExp (expression tw) <> " | " <> op
+  where
+    pprintExp e = case e of
+      Var x -> x
+      a :$ Var b -> pprintExp a <> " " <> b
+      a :$ b -> pprintExp a <> " (" <> pprintExp b <> ")"
 
 data Config = Config
   { tweetStream :: Bird -> ResourceT IO (ResumableSource (ResourceT IO) StreamingAPI)

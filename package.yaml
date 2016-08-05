@@ -24,6 +24,7 @@ dependencies:
   - transformers
   - resourcet
   - lens
+  - hslogger
 
 default-extensions:
   - AutoDeriveTypeable

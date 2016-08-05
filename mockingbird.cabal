@@ -36,6 +36,7 @@ library
     , transformers
     , resourcet
     , lens
+    , hslogger
   exposed-modules:
       Mockingbird
       Mockingbird.Combinators
@@ -61,6 +62,7 @@ executable mockingbird
     , transformers
     , resourcet
     , lens
+    , hslogger
     , mockingbird
   default-language: Haskell2010
 
@@ -82,6 +84,7 @@ test-suite doctest
     , transformers
     , resourcet
     , lens
+    , hslogger
     , doctest >= 0.9 && < 0.12
     , Glob >= 0.7 && < 0.8
     , yaml == 0.8.*
@@ -108,6 +111,7 @@ test-suite spec
     , transformers
     , resourcet
     , lens
+    , hslogger
     , mockingbird
     , hspec > 2 && < 3
     , QuickCheck >= 2.8 && < 2.9

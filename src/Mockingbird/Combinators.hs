@@ -8,8 +8,8 @@ import           Web.Twitter.Conduit   (Credential (..), OAuth (..), def,
                                         setCredential, twitterOAuth)
 
 
-eval :: Bird -> Exp T.Text -> Exp T.Text
-eval b = getCombinator (definition b)
+eval :: Bird -> TWExp T.Text -> TWExp T.Text
+eval b te = te { expression = getCombinator (definition b) (expression te) }
 
 allBirds :: IO [Bird]
 allBirds = sequence [sBird, kBird, iBird, mBird]
