@@ -11,7 +11,7 @@ import           Web.Twitter.Types            (Status, StreamingAPI)
 data Exp x
   = Exp x :$ Exp x
   | Var x
-  deriving (Eq, Show, Read, Generic, Functor)
+  deriving (Eq, Show, Read, Generic, Functor, Foldable, Traversable)
 
 infixl 2 :$
 
@@ -21,10 +21,13 @@ data TWExp x = TWExp
   } deriving (Eq, Show, Read, Generic, Functor)
 
 
-eHead :: TWExp x -> x
-eHead e = case expression e of
-  Var x  -> x
-  i :$ _ -> eHead $ TWExp i Nothing
+eHead :: Exp T.Text -> Maybe T.Text
+eHead e = go e
+  where
+    go (Var x) = if T.head x == '@' then Just x else Nothing
+    go (a :$ b) = case go a of
+      Nothing -> go b
+      v       -> v
 
 pprint :: TWExp T.Text -> T.Text
 pprint tw = case originalPoster tw of

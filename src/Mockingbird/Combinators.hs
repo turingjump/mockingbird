@@ -22,6 +22,10 @@ kBird = makeBird "secret/kbird.txt" go
     go name (r@(_ :$ _ :$ _) :$ d) = go name r :$ d
     go name r@(n :$ y :$ _) | n == Var ("@" <> name) = y
                             | otherwise              = r
+    go name r@(a :$ b) = case eHead a of
+      Nothing -> a :$ go name b
+      Just h -> if h == name then go name a :$ b else r
+
     go _ z = z
 
 -- | @S@ bird
@@ -32,6 +36,9 @@ sBird = makeBird "secret/sbird.txt" go
     go name (r@(_ :$ _ :$ _ :$ _) :$ d) = go name r :$ d
     go name r@(n :$ x :$ y :$ z) | n == Var ("@" <> name) = x :$ z :$ (y :$ z)
                                  | otherwise              = r
+    go name r@(a :$ b) = case eHead a of
+      Nothing -> a :$ go name b
+      Just h -> if h == name then go name a :$ b else r
     go _ z = z
 
 -- | @I@ or identity bird
@@ -41,7 +48,9 @@ iBird = makeBird "secret/ibird.txt" go
   where
     go name (r@(_ :$ _) :$ d) = go name r :$ d
     go name r@(n :$ x) | n == Var ("@" <> name) = x
-                       | otherwise              = r
+                       | otherwise              = case eHead n of
+      Nothing -> n :$ go name x
+      Just h -> if h == name then go name n :$ x else r
     go _ z = z
 
 -- | @M@ bird.
@@ -51,9 +60,10 @@ mBird = makeBird "secret/mbird.txt" go
   where
     go name (r@(_ :$ _) :$ d) = go name r :$ d
     go name r@(n :$ x) | n == Var ("@" <> name) = x :$ x
-                       | otherwise              = r
+                       | otherwise              = case eHead n of
+      Nothing -> n :$ go name x
+      Just h -> if h == name then go name n :$ x else r
     go _ z = z
-
 
 makeBird :: FilePath -> (T.Text -> Exp T.Text -> Exp T.Text) -> IO Bird
 makeBird file comb = do

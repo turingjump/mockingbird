@@ -83,6 +83,12 @@ birdsSpec = describe "birds" $ do
       let Right v = parseTweet "a b c"
       test kBird v `shouldReturn` Var "a" :$ Var "b" :$ Var "c"
 
+    it "evals when it is the head" $ do
+      name <- nick <$> kBird
+      let Right v = parseTweet $ "a (@" <> name <> " b c)"
+      {-print $ eHead v-}
+      test kBird v `shouldReturn` Var "a" :$ Var "b"
+
     it "associates left" $ do
       Right v <- parse kBird "x y z"
       test kBird v `shouldReturn` (Var "x" :$ Var "z")

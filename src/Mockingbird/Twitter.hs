@@ -41,8 +41,7 @@ testConfig statuses post = Config
 evalTweet :: Bird -> Status -> Maybe T.Text
 evalTweet bird tweet = case parseTweet $ statusText tweet of
   Left err -> Just err
-  Right e | "@" <> nick bird == eHead e
-         && eval bird e /= e     -> case eval bird e of
+  Right e | eval bird e /= e     -> case eval bird e of
               t@(TWExp _ (Just _))  -> Just $ pprint t
               t                     -> Just $ pprint t
                 { originalPoster = Just $ userName (statusUser tweet)}

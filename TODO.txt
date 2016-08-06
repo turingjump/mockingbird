@@ -1,7 +1,6 @@
 - Add Y combinator
+- Make defining a new bird possible in the config file
 - Make T | JMP Labs page
 - Add photos and other profile info for birds
 - Come up with a demo tweet
 - Stop tweeting if there have been too many eval steps
-- Logging
-- Mention original tweeter's handle (necessary for a reply)
