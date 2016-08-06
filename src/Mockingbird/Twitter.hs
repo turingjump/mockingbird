@@ -42,9 +42,8 @@ evalTweet :: Bird -> Status -> Maybe T.Text
 evalTweet bird tweet = case parseTweet $ statusText tweet of
   Left err -> Just err
   Right e | eval bird e /= e     -> case eval bird e of
-              t@(TWExp _ (Just _))  -> Just $ pprint t
               t                     -> Just $ pprint t
-                { originalPoster = Just $ userName (statusUser tweet)}
+                { originalPoster = Just $ userScreenName (statusUser tweet)}
           | otherwise            -> Nothing
 
 -- | Handles one tweet, responding if appropriate

@@ -32,7 +32,7 @@ eHead e = go e
 pprint :: TWExp T.Text -> T.Text
 pprint tw = case originalPoster tw of
   Nothing -> pprintExp (expression tw)
-  Just op -> pprintExp (expression tw) <> " | " <> op
+  Just op -> pprintExp (expression tw) <> " | @" <> op
   where
     pprintExp e = case e of
       Var x -> x

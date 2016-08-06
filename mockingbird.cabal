@@ -24,7 +24,7 @@ library
   hs-source-dirs:
       src
   default-extensions: AutoDeriveTypeable ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveFoldable DeriveTraversable FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeOperators
-  ghc-options: -Wall
+  ghc-options: -Wall -O2
   build-depends:
       base >= 4.7 && < 4.10
     , text
@@ -51,7 +51,7 @@ executable mockingbird
   hs-source-dirs:
       driver
   default-extensions: AutoDeriveTypeable ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveFoldable DeriveTraversable FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeOperators
-  ghc-options: -Wall
+  ghc-options: -Wall -O2
   build-depends:
       base >= 4.7 && < 4.10
     , text
@@ -74,7 +74,7 @@ test-suite doctest
   hs-source-dirs:
       test
   default-extensions: AutoDeriveTypeable ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveFoldable DeriveTraversable FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeOperators
-  ghc-options: -Wall
+  ghc-options: -Wall -O2
   build-depends:
       base >= 4.7 && < 4.10
     , text
@@ -102,7 +102,7 @@ test-suite spec
   hs-source-dirs:
       test
   default-extensions: AutoDeriveTypeable ConstraintKinds DataKinds DefaultSignatures DeriveFunctor DeriveGeneric DeriveFoldable DeriveTraversable FlexibleContexts FlexibleInstances FunctionalDependencies GADTs MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeOperators
-  ghc-options: -Wall
+  ghc-options: -Wall -O2
   build-depends:
       base >= 4.7 && < 4.10
     , text
