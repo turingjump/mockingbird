@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+WorkingDirectory=/home/jkarni/mockingbird
 ExecStart=/usr/local/bin/mockingbird
 Restart=always
 RestartSec=60
