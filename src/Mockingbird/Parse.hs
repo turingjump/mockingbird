@@ -12,7 +12,7 @@ import Mockingbird.Types
 twExpParser :: Parsec String u (TWExp String)
 twExpParser = do
   e <- expParser
-  orig <- optionMaybe $ reservedOp lang "|" >> lexeme lang (identifier lang)
+  orig <- optionMaybe $ reservedOp lang "|" >> char '@' >> lexeme lang (identifier lang)
   return $ TWExp
     { expression = e
     , originalPoster = orig

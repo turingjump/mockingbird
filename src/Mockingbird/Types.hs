@@ -24,7 +24,7 @@ data TWExp x = TWExp
 eHead :: Exp T.Text -> Maybe T.Text
 eHead e = go e
   where
-    go (Var x) = if T.head x == '@' then Just x else Nothing
+    go (Var x) = if T.head x == '@' then Just (T.drop 1 x) else Nothing
     go (a :$ b) = case go a of
       Nothing -> go b
       v       -> v

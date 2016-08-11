@@ -14,6 +14,7 @@ eval b te = te { expression = getCombinator (definition b) (expression te) }
 allBirds :: IO [Bird]
 allBirds = sequence [sBird, kBird, iBird, mBird]
 
+-- TODO: This way of defining birds is error-prone and repetitive. Alo
 -- | @K@ or constant bird
 -- Definition: @ K x y = x @
 kBird :: IO Bird
