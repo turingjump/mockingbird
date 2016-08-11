@@ -85,9 +85,13 @@ birdsSpec = describe "birds" $ do
       test kBird v `shouldReturn` Var "a" :$ Var "b" :$ Var "c"
 
     it "evals when it is the head" $ do
-      name <- nick <$> kBird
-      let Right v = parseTweet $ "a (@" <> name <> " b c)"
-      test kBird v `shouldReturn` Var "a" :$ Var "b"
+      {-name <- nick <$> kBird-}
+      {-let Right v = parseTweet $ "a (@" <> name <> " b c)"-}
+      {-test kBird v `shouldReturn` Var "a" :$ Var "b"-}
+
+      let Right v = parseTweet "and (give (the wind (@tjmp_k way to (the wind))) and)"
+          Right v' = parseTweet "and (give (the wind (way (the wind))) and)"
+      test kBird v `shouldReturn` expression v'
 
     it "associates left" $ do
       Right v <- parse kBird "x y z"

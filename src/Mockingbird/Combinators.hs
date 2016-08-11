@@ -7,6 +7,7 @@ import           Mockingbird.Types
 import           Web.Twitter.Conduit   (Credential (..), OAuth (..), def,
                                         setCredential, twitterOAuth)
 
+import Debug.Trace
 
 eval :: Bird -> TWExp T.Text -> TWExp T.Text
 eval b te = te { expression = getCombinator (definition b) (expression te) }
@@ -21,12 +22,14 @@ kBird :: IO Bird
 kBird = makeBird "secret/kbird.txt" go
   where
     go name (r@(_ :$ _ :$ _) :$ d) = go name r :$ d
-    go name r@(n :$ y :$ _) | n == Var ("@" <> name) = y
-                            | otherwise              = r
+    go name r@(n :$ y :$ z)
+      | n == Var ("@" <> name) = y
+      | otherwise              = case eHead (n :$ y) of
+          Nothing -> n :$ y :$ go name z
+          Just h -> if h == name then go name (n :$ y) :$ z else r
     go name r@(a :$ b) = case eHead a of
-      Nothing -> a :$ go name b
+      Nothing -> a :$ traceShowId (go name b)
       Just h -> if h == name then go name a :$ b else r
-
     go _ z = z
 
 -- | @S@ bird
@@ -35,8 +38,11 @@ sBird :: IO Bird
 sBird = makeBird "secret/sbird.txt" go
   where
     go name (r@(_ :$ _ :$ _ :$ _) :$ d) = go name r :$ d
-    go name r@(n :$ x :$ y :$ z) | n == Var ("@" <> name) = x :$ z :$ (y :$ z)
-                                 | otherwise              = r
+    go name r@(n :$ x :$ y :$ z)
+      | n == Var ("@" <> name) = x :$ z :$ (y :$ z)
+      | otherwise              = case eHead (n :$ x :$ y) of
+          Nothing -> n :$ x:$ y :$ go name z
+          Just h -> if h == name then go name (n :$ x :$ y) :$ z else r
     go name r@(a :$ b) = case eHead a of
       Nothing -> a :$ go name b
       Just h -> if h == name then go name a :$ b else r
